@@ -3,6 +3,13 @@ from jax import jit, value_and_grad
 from jax.lax import fori_loop
 import optax
 
+def MSELoss(y_true, y_pred):
+    return jnp.mean((y_true - y_pred) ** 2)
+
+def NLLLoss(y_true, y_pred, var, eps=10**-6):
+    v = jnp.maximum(var, eps)
+    return 0.5 * jnp.mean(jnp.log(v) + (y_true - y_pred) ** 2 / v)
+
 def fit(loss_fn, optimizer, init_params, steps):
     opt_state = optimizer.init(init_params)
 
