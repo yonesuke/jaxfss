@@ -19,7 +19,7 @@ setuptools.setup(
     description="JAX/Flax implementation of finite-size scaling",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yonesuke/jax-fss",
+    url="https://github.com/yonesuke/jaxfss",
     packages=setuptools.find_packages("src"),
     package_dir={"": "src"},
     classifiers=[
