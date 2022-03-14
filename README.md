@@ -9,7 +9,7 @@ pip install git+git://github.com/yonesuke/jaxfss.git
 
 ## Quickstart
 `jaxfss` is a tool for finite-size scaling.
-See finite-size scaling on the Binder ratio of the 2d Ising model in [example](example).
+See finite-size scaling on the Binder ratio of the 2d Ising model in [examples](examples).
 
 ## Components
 Here, we highlight the main blocks to do the finite-size scaling.
