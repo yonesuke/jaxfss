@@ -20,11 +20,11 @@ def fit(loss_fn, optimizer, init_params, steps):
         updates, opt_state = optimizer.update(grad, opt_state, params)
         params = optax.apply_updates(params, updates)
         losses = losses.at[i].set(loss)
-        critical_vals = critical_vals.at[i].set(params["critical"])
+        critical_vals = critical_vals.at[i].set(params["fss"])
         return [params, opt_state, losses, critical_vals]
 
     losses = jnp.zeros(steps)
-    n_critical = len(init_params["critical"])
+    n_critical = len(init_params["fss"])
     critical_vals = jnp.zeros((steps, n_critical))
     init_val = [init_params, opt_state, losses, critical_vals]
 
