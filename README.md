@@ -18,8 +18,8 @@ In jaxfss, we approximate the scaling function to a neural netowrk.
 We provide a simple multi layer perceptron (MLP) module to construct neural networks, which is build upon [Flax](https://github.com/google/flax).
 ```python
 import jaxfss
+import jax
 import jax.numpy as jnp
-from jax import random
 
 mlp = jaxfss.MLP(features=[20,20,1])
 mlp_params = mlp.init(jax.random.PRNGKey(0), jnp.array([[1]]))
