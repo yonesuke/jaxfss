@@ -4,7 +4,7 @@ JAX/Flax implementation of finite-size scaling
 ## Installation
 `jaxfss` can be installed with pip directly from GitHub, with the following command:
 ```
-pip install git+git://github.com/yonesuke/jaxfss.git
+pip install git+https://github.com/yonesuke/jaxfss.git
 ```
 
 ## Quickstart
