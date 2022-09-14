@@ -11,8 +11,8 @@ setuptools.setup(
         "flax",
         "optax",
         "distrax",
-        "rationalnets @ git+ssh://git@github.com/yonesuke/RationalNets.git",
-        "softclip @ git+ssh://git@github.com/yonesuke/softclip.git"
+        "rationalnets",
+        "softclip"
     ],
     author="yonesuke",
     author_email="13e.e.c.13@gmail.com",
