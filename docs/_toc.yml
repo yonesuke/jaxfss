@@ -2,8 +2,16 @@
 # Learn more at https://jupyterbook.org/customize/toc.html
 
 format: jb-book
-root: intro
-chapters:
-- file: markdown
-- file: notebooks
-- file: markdown-notebooks
+root: index
+parts:
+- caption: Guides
+  chapters:
+  - file: installation
+  - file: nsa
+  - file: usage
+
+- caption: Examples
+  chapters:
+  - file: ising
+  - file: percolation
+
