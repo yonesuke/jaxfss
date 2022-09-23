@@ -50,6 +50,8 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="_static/sphinx-thebe.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="canonical" href="https://yonesuke.github.io/usage.html" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -405,7 +407,8 @@ title="Print to PDF"
 <section id="scaling-function">
 <h2>1. Scaling function<a class="headerlink" href="#scaling-function" title="Permalink to this headline">#</a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">jaxfss</span></code>, we approximate the scaling function to a neural netowrk.
-We provide a simple multi layer perceptron (MLP) module to construct neural networks, which is build upon <a class="reference external" href="https://github.com/google/flax">Flax</a>.</p>
+We provide a simple multi layer perceptron (MLP) module to construct neural networks, which is build upon <a class="reference external" href="https://github.com/google/flax">Flax</a>.
+The following example shows the MLP with input and output dimension one and intermediate dimension 20.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">jaxfss</span>
 <span class="kn">import</span> <span class="nn">jax</span>
 <span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
@@ -425,8 +428,7 @@ We provide a simple multi layer perceptron (MLP) module to construct neural netw
 </pre></div>
 </div>
 <p>In <code class="docutils literal notranslate"><span class="pre">RationalMLP</span></code>, the activation function is approximated by a rational function,
-and the parameters of the activation function are also optimized during the learning process.</p>
-<p>See <a class="reference external" href="https://arxiv.org/abs/2004.01902">arXiv:2004.01902</a> for the original paper.</p>
+and the parameters of the activation function are also optimized during the learning process. See <a class="reference external" href="https://arxiv.org/abs/2004.01902">arXiv:2004.01902</a> for the original paper.</p>
 </section>
 <section id="data-handler">
 <h2>2. Data handler<a class="headerlink" href="#data-handler" title="Permalink to this headline">#</a></h2>
@@ -454,7 +456,8 @@ and the parameters of the activation function are also optimized during the lear
 <h2>3. Loss function<a class="headerlink" href="#loss-function" title="Permalink to this headline">#</a></h2>
 <p>We provide a helper function for constructing loss function.
 <code class="docutils literal notranslate"><span class="pre">MSELoss</span></code> is the mean squared error, and <code class="docutils literal notranslate"><span class="pre">NLLLoss</span></code> is the negative log likelihood loss.
-The function name is derived from pytorch.</p>
+The function name is derived from pytorch.
+Check out how it’s being used in the Examples.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">jaxfss</span>
 
 <span class="k">def</span> <span class="nf">loss_fn</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
@@ -464,6 +467,20 @@ The function name is derived from pytorch.</p>
     <span class="k">return</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
 </pre></div>
 </div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MSELoss</span></code> reads</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[
+\mathcal{L}=\frac{1}{N}\sum_{i=1}^{N}\frac{1}{2}(Y_{i}-\mathsf{NN}(X_{i}))^{2}
+\]</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NLLLoss</span></code> reads</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[
+\mathcal{L}=\frac{1}{N}\sum_{i=1}^{N}\frac{1}{2}\left[\frac{(Y_{i}-\mathsf{NN}(X_{i}))^{2}}{E_{i}^{2}}+\log(2\pi E_{i}^{2})\right]
+\]</div>
 </section>
 <section id="train">
 <h2>4. Train<a class="headerlink" href="#train" title="Permalink to this headline">#</a></h2>
