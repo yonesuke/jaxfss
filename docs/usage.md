@@ -4,6 +4,7 @@ Here, we highlight the main blocks to do the finite-size scaling.
 ## 1. Scaling function
 In `jaxfss`, we approximate the scaling function to a neural netowrk.
 We provide a simple multi layer perceptron (MLP) module to construct neural networks, which is build upon [Flax](https://github.com/google/flax).
+The following example shows the MLP with input and output dimension one and intermediate dimension 20.
 ```python
 import jaxfss
 import jax
@@ -24,9 +25,7 @@ mlp = jaxfss.RationalMLP(features=[20,20,1])
 mlp_params = mlp.init(jax.random.PRNGKey(0), jnp.array([[1]]))
 ```
 In `RationalMLP`, the activation function is approximated by a rational function,
-and the parameters of the activation function are also optimized during the learning process.
-
-See [arXiv:2004.01902](https://arxiv.org/abs/2004.01902) for the original paper.
+and the parameters of the activation function are also optimized during the learning process. See [arXiv:2004.01902](https://arxiv.org/abs/2004.01902) for the original paper.
 
 ## 2. Data handler
 In neural networks, it is very important to pre-normalize the training data.
@@ -54,6 +53,7 @@ train_data = dataset.training_data
 We provide a helper function for constructing loss function.
 `MSELoss` is the mean squared error, and `NLLLoss` is the negative log likelihood loss.
 The function name is derived from pytorch.
+Check out how it's being used in the Examples.
 ```python
 import jaxfss
 
@@ -63,6 +63,17 @@ def loss_fn(params):
     y_pred = ...
     return jaxfss.MSELoss(y_true, y_pred)
 ```
+- `MSELoss` reads
+
+$$
+\mathcal{L}=\frac{1}{N}\sum_{i=1}^{N}\frac{1}{2}(Y_{i}-\mathsf{NN}(X_{i}))^{2}
+$$
+
+- `NLLLoss` reads
+
+$$
+\mathcal{L}=\frac{1}{N}\sum_{i=1}^{N}\frac{1}{2}\left[\frac{(Y_{i}-\mathsf{NN}(X_{i}))^{2}}{E_{i}^{2}}+\log(2\pi E_{i}^{2})\right]
+$$
 
 ## 4. Train
 Once everything is ready, all you need to do is learn!
