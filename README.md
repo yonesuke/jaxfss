@@ -1,4 +1,6 @@
 # jaxfss
+![github workflow](https://github.com/yonesuke/jaxfss/actions/workflows/book.yml/badge.svg)
+[![Jupyter Book Badge](https://jupyterbook.org/badge.svg)](https://yonesuke.github.io/jaxfss/)
 JAX/Flax implementation of finite-size scaling
 
 ## Installation
