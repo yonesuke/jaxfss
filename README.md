@@ -3,6 +3,7 @@
 ![PyPI](https://img.shields.io/pypi/v/jaxfss)
 ![github workflow](https://github.com/yonesuke/jaxfss/actions/workflows/book.yml/badge.svg)
 [![Jupyter Book Badge](https://jupyterbook.org/badge.svg)](https://yonesuke.github.io/jaxfss/)
+[![Downloads](https://static.pepy.tech/badge/jaxfss)](https://pepy.tech/project/jaxfss)
 
 JAX/Flax implementation of finite-size scaling analysis
 ![ising_binder](https://user-images.githubusercontent.com/12659790/191948671-dc28959d-0e24-4197-baca-0c2ef0aad311.png)
