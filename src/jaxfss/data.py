@@ -55,6 +55,11 @@ class CriticalData:
             "observable_var": self.observable_var
         }
 
+    @property
+    def training_data(self):
+        """Alias for train_data for backward compatibility."""
+        return self.train_data
+
     @classmethod
     def from_file(cls, fname):
         Ls, Ts, As, As_err = jnp.array(np.loadtxt(fname, unpack=True))

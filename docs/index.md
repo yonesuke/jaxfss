@@ -1,44 +1,45 @@
 # `jaxfss` Reference Documentation
 ![](images/ising_binder.png)
 
-`jaxfss` is a **finite-size scaling analysis** package.
-It is built up on [JAX](https://github.com/google/jax) and [Flax](https://github.com/google/flax).
+`jaxfss` is a **neural finite-size scaling analysis** package built on [JAX](https://github.com/google/jax), [Flax](https://github.com/google/flax), and [Optax](https://github.com/deepmind/optax).
 
 ## Finite-Size Scaling Analysis
-The physical quantity near a critical point in a finite-size system obeys the scaling law written as
+
+The physical quantity near a critical point in a finite-size system obeys the scaling law:
 
 $$
-A(T,L)=L^{-c_{2}}F[(T-T_{\mathrm{c}})L^{c_{1}}]
+A(T, L) = L^{-c_2} F\left[ (T - T_{\mathrm{c}}) L^{c_1} \right]
 $$
 
-where $A(T, L)$ is a physical quantity at temperature $T$ in a finite-size system of which size is $L$. $T_{\mathrm{c}}$ is a critical temperature. The exponent $c_1$ and $c_2$ are critical exponents.
-Here $F[\cdot]$ is a scaling function. Unfortunately, we do not know the scaling function’s form in advance. Thus, we need to infer not only the value of critical temperature and exponents but also the scaling function itself from given data.
+where $A(T, L)$ is a physical quantity at temperature $T$ in a finite-size system of size $L$. $T_{\mathrm{c}}$ is the critical temperature, and $c_1$ and $c_2$ are critical exponents.
+Here $F[\cdot]$ is the unknown universal scaling function.
 
-`jaxfss` is a package for those who need to analyze critical phenomena and calculate the critical point and critical exponents from the finite system size data.
-The basic idea is that the scaling function is well approximated by some neural network function.
-It is made up of JAX and Flax, and you can easily use.
-The idea of this package is so simple that you can extend it to your need if it is not sufficient for you.
+`jaxfss` estimates critical points and exponents by parameterizing the scaling function with a neural network and optimizing it end-to-end.
 
-## Other packages
-- Finite-size scaling package by Gaussian process with C++
+## Related Packages
 
-    https://kenjiharada.github.io/BSA/
-- Finite-size scaling package by neural network and Gaussian process with Python (PyTorch)
-
-    https://github.com/KenjiHarada/FSS-tools
+- [BSA (C++)](https://kenjiharada.github.io/BSA/): Finite-size scaling with Gaussian processes.
+- [FSS-tools (PyTorch)](https://github.com/KenjiHarada/FSS-tools): Finite-size scaling with neural networks and Gaussian processes.
 
 ## Citation
-Please cite this paper when you use this package for your research!!
-- [Full paper] Ryosuke Yoneda and Kenji Harada, Neural Network Approach to Scaling Analysis of Critical Phenomena, [arXiv: 2209.01777](https://arxiv.org/abs/2209.01777).
 
-    ```tex
-    @article{yoneda2022neural,
-        title={Neural Network Approach to Scaling Analysis of Critical Phenomena},
-        author={Yoneda, Ryosuke and Harada, Kenji},
-        url={https://arxiv.org/abs/2209.01777},
-        journal={arXiv preprint arXiv:2209.01777},
-        year={2022}
-    }
-    ```
+Please cite our paper published in *Physical Review E* when using `jaxfss`:
 
-- [Conference paper] Currently preparing!!
+- Ryosuke Yoneda and Kenji Harada, *Neural network approach to scaling analysis of critical phenomena*, **Phys. Rev. E 107, 044128 (2023)**. [doi:10.1103/PhysRevE.107.044128](https://doi.org/10.1103/PhysRevE.107.044128)
+
+```bibtex
+@article{PhysRevE.107.044128,
+  title = {Neural network approach to scaling analysis of critical phenomena},
+  author = {Yoneda, Ryosuke and Harada, Kenji},
+  journal = {Phys. Rev. E},
+  volume = {107},
+  issue = {4},
+  pages = {044128},
+  numpages = {10},
+  year = {2023},
+  month = {Apr},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevE.107.044128},
+  url = {https://link.aps.org/doi/10.1103/PhysRevE.107.044128}
+}
+```

@@ -1,98 +1,135 @@
 # Usage
-Here, we highlight the main blocks to do the finite-size scaling.
 
-## 1. Scaling function
-In `jaxfss`, we approximate the scaling function to a neural netowrk.
-We provide a simple multi layer perceptron (MLP) module to construct neural networks, which is build upon [Flax](https://github.com/google/flax).
-The following example shows the MLP with input and output dimension one and intermediate dimension 20.
+Here, we highlight the main building blocks to perform finite-size scaling analysis with `jaxfss`.
+
+---
+
+## 1. Scaling Function
+
+In `jaxfss`, we approximate the unknown universal scaling function $F[X]$ with a neural network.
+We provide modules built on [Flax](https://github.com/google/flax):
+
+### Standard MLP
+A multilayer perceptron with customizable activations (default: `sigmoid`):
+
 ```python
-import jaxfss
 import jax
 import jax.numpy as jnp
+import jaxfss
 
-mlp = jaxfss.MLP(features=[20,20,1])
+mlp = jaxfss.MLP(features=[20, 20, 1])
 mlp_params = mlp.init(jax.random.PRNGKey(0), jnp.array([[1]]))
 ```
-Default activation function of `MLP` is a sigmoid function. You can change this via `act` argument.
 
-We also provide the MLP with rational activation function.
+### RationalMLP
+A network with trainable rational function activations ($P(x)/Q(x)$) from [arXiv:2004.01902](https://arxiv.org/abs/2004.01902):
+
 ```python
-import jaxfss
+import jax
 import jax.numpy as jnp
-from jax import random
+import jaxfss
 
-mlp = jaxfss.RationalMLP(features=[20,20,1])
+mlp = jaxfss.RationalMLP(features=[20, 20, 1])
 mlp_params = mlp.init(jax.random.PRNGKey(0), jnp.array([[1]]))
 ```
-In `RationalMLP`, the activation function is approximated by a rational function,
-and the parameters of the activation function are also optimized during the learning process. See [arXiv:2004.01902](https://arxiv.org/abs/2004.01902) for the original paper.
 
-## 2. Data handler
-In neural networks, it is very important to pre-normalize the training data.
-`CriticalData` is a module that does the pre-processing for you.
+`RationalMLP` is especially effective for smooth physical functions without vanishing gradient or sharp cusp artifacts.
+
+---
+
+## 2. Data Handler (`CriticalData`)
+
+Normalizing physical input data before feeding them into neural networks is crucial for numerical stability and convergence.
+`CriticalData` automatically applies affine scaling:
 
 ```python
 import jaxfss
 
-Ls = ... # systemsize arrays
-Ts = ... # temperature arrays
-As = ... # observable arrays
-As_err = ... # observable error arrays
+Ls = ...      # System size array
+Ts = ...      # Temperature / tuning parameter array
+As = ...      # Observable array
+As_err = ...  # Error bar array
+
 dataset = jaxfss.CriticalData(Ls, Ts, As, As_err)
-train_data = dataset.training_data # dict with "system_size", "temperature", "observable", "observable_var"
+train_data = dataset.train_data  # Or dataset.training_data
+# Keys: "system_size", "temperature", "observable", "observable_var"
 ```
-You can also initialize the module from file:
-```python
-import jaxfss
 
+You can also load directly from a four-column text file ($L$, $T$, $A$, $A_{\mathrm{err}}$):
+
+```python
 dataset = jaxfss.CriticalData.from_file(fname="filename.txt")
-train_data = dataset.training_data
+train_data = dataset.train_data
 ```
 
-## 3. Loss function
-We provide a helper function for constructing loss function.
-`MSELoss` is the mean squared error, and `NLLLoss` is the negative log likelihood loss.
-The function name is derived from pytorch.
-Check out how it's being used in the Examples.
-```python
-import jaxfss
+The bijector used for temperature normalization is available as `dataset.bij_temperature` to invert normalized predictions back to physical units:
 
-def loss_fn(params):
-    ...
-    y_true = ...
-    y_pred = ...
-    return jaxfss.MSELoss(y_true, y_pred)
+```python
+physical_Tc = dataset.bij_temperature.inverse(scaled_Tc)
 ```
-- `MSELoss` reads
+
+---
+
+## 3. Loss Functions
+
+`jaxfss` provides loss functions matching common statistical criteria:
+
+### Mean Squared Error (`MSELoss`)
+For datasets with uniform or negligible error bars:
 
 $$
-\mathcal{L}=\frac{1}{N}\sum_{i=1}^{N}\frac{1}{2}(Y_{i}-\mathsf{NN}(X_{i}))^{2}
+\mathcal{L}_{\mathrm{MSE}} = \frac{1}{N} \sum_{i=1}^N (Y_i - \hat{Y}_i)^2
 $$
-
-- `NLLLoss` reads
-
-$$
-\mathcal{L}=\frac{1}{N}\sum_{i=1}^{N}\frac{1}{2}\left[\frac{(Y_{i}-\mathsf{NN}(X_{i}))^{2}}{E_{i}^{2}}+\log(2\pi E_{i}^{2})\right]
-$$
-
-## 4. Train
-Once everything is ready, all you need to do is learn!
-`fit` function is a wrapper that learns using [optax](https://github.com/deepmind/optax).
-We note that `init_params` should be a dict with keys `mlp` and `fss`.
 
 ```python
-import jaxfss
+loss = jaxfss.MSELoss(y_true, y_pred)
+```
+
+### Negative Log-Likelihood (`NLLLoss`)
+For Monte Carlo data with heteroscedastic error bars / variances:
+
+$$
+\mathcal{L}_{\mathrm{NLL}} = \frac{1}{2N} \sum_{i=1}^N \left[ \frac{(Y_i - \hat{Y}_i)^2}{\sigma_i^2} + \log(2\pi \sigma_i^2) \right]
+$$
+
+```python
+loss = jaxfss.NLLLoss(y_true, y_pred, var)
+```
+
+---
+
+## 4. Optimization (`fit`)
+
+The `fit` function executes a JIT-compiled optimization loop using [Optax](https://github.com/deepmind/optax).
+
+### Multi-Optimizer (Recommended)
+Because neural network weights and physical critical exponents have different scales and sensitivities, using separate learning rates is recommended:
+
+```python
 import optax
+import jaxfss
 
 init_params = {
     "mlp": mlp_params,
-    "fss": ...
+    "fss": jnp.zeros(2)  # Critical parameters
 }
-def loss_fn(params):
-    ...
-    return ...
-optimizer = optax.adam(learning_rate=10**-3)
-steps = 10**4
-params, losses, fsses = jaxfss.fit(loss_fn, optimizer, init_params, steps)
+
+# Separate optimizers for MLP and FSS parameters
+optimizer = {
+    "mlp": optax.adam(learning_rate=1e-3),
+    "fss": optax.adam(learning_rate=1e-2),
+}
+
+steps = 10000
+params, losses, critical_vals = jaxfss.fit(loss_fn, optimizer, init_params, steps)
 ```
-`fit` function returns the final `params` together with values of loss and fss in the learning process.
+
+### Single Optimizer
+You can also pass a single Optax optimizer:
+
+```python
+optimizer = optax.adam(learning_rate=1e-3)
+params, losses, critical_vals = jaxfss.fit(loss_fn, optimizer, init_params, steps)
+```
+
+`critical_vals` records the history of `params["fss"]` across all optimization steps.

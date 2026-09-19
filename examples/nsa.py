@@ -8,8 +8,11 @@ from softclip import SoftClip
 mlp = jaxfss.RationalMLP(features=[20, 20, 1])
 mlp_params = mlp.init(jax.random.PRNGKey(0), jnp.array([[1]]))
 
+import os
+
 # creating data
-dataset = jaxfss.CriticalData.from_file(fname="data/ising-square-B.dat")
+data_path = os.path.join(os.path.dirname(__file__), "data", "ising-square-B.dat")
+dataset = jaxfss.CriticalData.from_file(fname=data_path)
 train_data = dataset.train_data
 
 # creating bijector for stablizing learning
