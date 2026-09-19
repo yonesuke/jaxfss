@@ -48,12 +48,6 @@ class Rational(nnx.Module):
 
 
 
-def _wrap_list(items):
-    if hasattr(nnx, "List"):
-        return nnx.List(items)
-    return list(items)
-
-
 class MLP(nnx.Module):
     """Multi Layer Perceptron in Flax NNX for approximating scaling functions.
 
@@ -72,13 +66,12 @@ class MLP(nnx.Module):
         *,
         rngs: nnx.Rngs,
     ):
-        layers = []
+        self.layers = nnx.List()
         in_dim = din
         for f in features[:-1]:
-            layers.append(nnx.Linear(in_dim, f, rngs=rngs))
+            self.layers.append(nnx.Linear(in_dim, f, rngs=rngs))
             in_dim = f
-        layers.append(nnx.Linear(in_dim, features[-1], rngs=rngs))
-        self.layers = _wrap_list(layers)
+        self.layers.append(nnx.Linear(in_dim, features[-1], rngs=rngs))
         self.act = act
 
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
@@ -107,16 +100,15 @@ class RationalMLP(nnx.Module):
         *,
         rngs: nnx.Rngs,
     ):
-        layers = []
-        activations = []
+        self.layers = nnx.List()
+        self.activations = nnx.List()
         in_dim = din
         for f in features[:-1]:
-            layers.append(nnx.Linear(in_dim, f, rngs=rngs))
-            activations.append(Rational(p_order, q_order))
+            self.layers.append(nnx.Linear(in_dim, f, rngs=rngs))
+            self.activations.append(Rational(p_order, q_order))
             in_dim = f
-        layers.append(nnx.Linear(in_dim, features[-1], rngs=rngs))
-        self.layers = _wrap_list(layers)
-        self.activations = _wrap_list(activations)
+        self.layers.append(nnx.Linear(in_dim, features[-1], rngs=rngs))
+
 
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
         for layer, act in zip(self.layers[:-1], self.activations):
