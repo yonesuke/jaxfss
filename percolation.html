@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Two-Dimensional Bond Percolation Model &#8212; jaxfss documentation</title>
+    <title>Two-Dimensional Bond Percolation Model (Flax NNX) &#8212; jaxfss documentation</title>
   
   
   
@@ -69,7 +69,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Two-Dimensional Ising Model" href="ising.html" />
+    <link rel="prev" title="Two-Dimensional Ising Model (Flax NNX)" href="ising.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -184,8 +184,8 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="ising.html">Two-Dimensional Ising Model</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Two-Dimensional Bond Percolation Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ising.html">Two-Dimensional Ising Model (Flax NNX)</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Two-Dimensional Bond Percolation Model (Flax NNX)</a></li>
 </ul>
 
     </div>
@@ -402,7 +402,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Two-Dimensional Bond Percolation Model</h1>
+    <h1>Two-Dimensional Bond Percolation Model (Flax NNX)</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -414,8 +414,8 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#theoretical-background">1. Theoretical Background</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-and-inspect-data">2. Load and Inspect Data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-neural-scaling-analysis">3. Set Up Neural Scaling Analysis</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-with-nsa">4. Optimization with NSA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-nnx-scaling-model">3. Set Up NNX Scaling Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-with-nnx">4. Optimization with NNX</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-collapse-and-nn-fitting-curve">5. Scaling Collapse and NN Fitting Curve</a></li>
 </ul>
             </nav>
@@ -428,18 +428,17 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="two-dimensional-bond-percolation-model">
-<h1>Two-Dimensional Bond Percolation Model<a class="headerlink" href="#two-dimensional-bond-percolation-model" title="Permalink to this heading">#</a></h1>
-<p>In this tutorial, we analyze the 2D bond percolation problem using <code class="docutils literal notranslate"><span class="pre">jaxfss</span></code>. Unlike the Binder ratio in the Ising model, both the temperature-like parameter <span class="math notranslate nohighlight">\(p\)</span> and the observable require non-zero scaling exponents (<span class="math notranslate nohighlight">\(c_1\)</span> and <span class="math notranslate nohighlight">\(c_2\)</span>).</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="two-dimensional-bond-percolation-model-flax-nnx">
+<h1>Two-Dimensional Bond Percolation Model (Flax NNX)<a class="headerlink" href="#two-dimensional-bond-percolation-model-flax-nnx" title="Permalink to this heading">#</a></h1>
+<p>In this tutorial, we analyze the 2D bond percolation problem using <code class="docutils literal notranslate"><span class="pre">jaxfss</span></code> and <strong>Flax NNX</strong> to simultaneously estimate three critical parameters: <span class="math notranslate nohighlight">\((c_1, c_2, p_{\mathrm{c}})\)</span>.</p>
 <section id="theoretical-background">
 <h2>1. Theoretical Background<a class="headerlink" href="#theoretical-background" title="Permalink to this heading">#</a></h2>
-<p>In 2D bond percolation on a square lattice, each edge is occupied with probability <span class="math notranslate nohighlight">\(p\)</span>. As <span class="math notranslate nohighlight">\(p\)</span> approaches the critical threshold <span class="math notranslate nohighlight">\(p_{\mathrm{c}} = 1/2\)</span>, an infinite cluster emerges.</p>
-<p>The mean cluster size (susceptibility) <span class="math notranslate nohighlight">\(\chi^{\mathrm{f}}(p, L)\)</span> of finite clusters satisfies the finite-size scaling relation:</p>
+<p>In 2D bond percolation on a square lattice, the mean cluster size <span class="math notranslate nohighlight">\(\chi^{\mathrm{f}}(p, L)\)</span> satisfies the finite-size scaling relation:</p>
 <div class="math notranslate nohighlight">
 \[
 \chi^{\mathrm{f}}(p, L) = L^{-c_2} F\left[ (p - p_{\mathrm{c}}) L^{c_1} \right]
 \]</div>
-<p>Known theoretical values for 2D percolation:</p>
+<p>Exact values for 2D percolation:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(p_{\mathrm{c}} = 1/2 = 0.5\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(c_1 = 1/\nu = 3/4 = 0.75\)</span></p></li>
@@ -448,12 +447,13 @@ document.write(`
 </section>
 <section id="load-and-inspect-data">
 <h2>2. Load and Inspect Data<a class="headerlink" href="#load-and-inspect-data" title="Permalink to this heading">#</a></h2>
-<p>We load data from <code class="docutils literal notranslate"><span class="pre">docs/data/percolation.txt</span></code>.</p>
+<p>We load data from <code class="docutils literal notranslate"><span class="pre">data/percolation.txt</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">optax</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">softclip</span><span class="w"> </span><span class="kn">import</span> <span class="n">SoftClip</span>
 
@@ -472,7 +472,7 @@ System sizes: [ 64. 128. 256.]
 </div>
 </div>
 </div>
-<p>Let’s visualize the raw cluster susceptibility data.</p>
+<p>Visualize the raw cluster susceptibility data.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">))</span>
@@ -502,10 +502,9 @@ System sizes: [ 64. 128. 256.]
 </div>
 </div>
 </section>
-<section id="set-up-neural-scaling-analysis">
-<h2>3. Set Up Neural Scaling Analysis<a class="headerlink" href="#set-up-neural-scaling-analysis" title="Permalink to this heading">#</a></h2>
-<p>For percolation, we estimate three critical parameters: <span class="math notranslate nohighlight">\((c_1, c_2, p_{\mathrm{c}})\)</span>.
-We constrain:</p>
+<section id="set-up-nnx-scaling-model">
+<h2>3. Set Up NNX Scaling Model<a class="headerlink" href="#set-up-nnx-scaling-model" title="Permalink to this heading">#</a></h2>
+<p>For percolation, we estimate <span class="math notranslate nohighlight">\((c_1, c_2, p_{\mathrm{c}})\)</span> with constraints:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(c_1 &gt; 0\)</span> via <code class="docutils literal notranslate"><span class="pre">SoftClip(low=0.0)</span></code></p></li>
 <li><p><span class="math notranslate nohighlight">\(c_2 &lt; 0\)</span> via <code class="docutils literal notranslate"><span class="pre">SoftClip(high=0.0)</span></code></p></li>
@@ -513,25 +512,20 @@ We constrain:</p>
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mlp</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">RationalMLP</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<span class="n">key</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-<span class="n">mlp_params</span> <span class="o">=</span> <span class="n">mlp</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-
-<span class="n">bij_c1</span> <span class="o">=</span> <span class="n">SoftClip</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bij_c1</span> <span class="o">=</span> <span class="n">SoftClip</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="n">bij_c2</span> <span class="o">=</span> <span class="n">SoftClip</span><span class="p">(</span><span class="n">high</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="n">bij_pc</span> <span class="o">=</span> <span class="n">SoftClip</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 
-<span class="n">init_params</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"mlp"</span><span class="p">:</span> <span class="n">mlp_params</span><span class="p">,</span>
-    <span class="s2">"fss"</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># [p_c1, p_c2, p_pc]</span>
-<span class="p">}</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">bijector</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">pc</span> <span class="o">=</span> <span class="n">p</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="n">bij_c1</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">p1</span><span class="p">),</span>
+        <span class="n">bij_c2</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">p2</span><span class="p">),</span>
+        <span class="n">bij_pc</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">pc</span><span class="p">)</span>
+    <span class="p">])</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">get_fss_params</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
-    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">pc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">"fss"</span><span class="p">]</span>
-    <span class="n">c1</span> <span class="o">=</span> <span class="n">bij_c1</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
-    <span class="n">c2</span> <span class="o">=</span> <span class="n">bij_c2</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
-    <span class="n">scaled_pc</span> <span class="o">=</span> <span class="n">bij_pc</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">pc</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">scaled_pc</span>
+<span class="n">scaling_fn</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">RationalMLP</span><span class="p">(</span><span class="n">din</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">42</span><span class="p">))</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">FSSModel</span><span class="p">(</span><span class="n">scaling_fn</span><span class="o">=</span><span class="n">scaling_fn</span><span class="p">,</span> <span class="n">n_critical</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">bijector</span><span class="o">=</span><span class="n">bijector</span><span class="p">)</span>
 
 <span class="n">train_data</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">train_data</span>
 <span class="n">Ls</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="s2">"system_size"</span><span class="p">]</span>
@@ -539,32 +533,30 @@ We constrain:</p>
 <span class="n">As</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="s2">"observable"</span><span class="p">]</span>
 <span class="n">vAs</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="s2">"observable_var"</span><span class="p">]</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">loss_fn</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
-    <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">scaled_pc</span> <span class="o">=</span> <span class="n">get_fss_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ts</span> <span class="o">-</span> <span class="n">scaled_pc</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ls</span> <span class="o">**</span> <span class="n">c1</span><span class="p">)</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">As</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ls</span> <span class="o">**</span> <span class="n">c2</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">loss_fn</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">FSSModel</span><span class="p">):</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="n">Ls</span><span class="p">,</span> <span class="n">Ts</span><span class="p">)</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">critical_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">scaled_target</span><span class="p">(</span><span class="n">Ls</span><span class="p">,</span> <span class="n">As</span><span class="p">)</span>
     <span class="n">V</span> <span class="o">=</span> <span class="n">vAs</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ls</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">c2</span><span class="p">))</span>
-    <span class="n">Y_pred</span> <span class="o">=</span> <span class="n">mlp</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">"mlp"</span><span class="p">],</span> <span class="n">X</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">NLLLoss</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y_pred</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">NLLLoss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 </section>
-<section id="optimization-with-nsa">
-<h2>4. Optimization with NSA<a class="headerlink" href="#optimization-with-nsa" title="Permalink to this heading">#</a></h2>
-<p>We train the model with Adam using separate learning rates.</p>
+<section id="optimization-with-nnx">
+<h2>4. Optimization with NNX<a class="headerlink" href="#optimization-with-nnx" title="Permalink to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"mlp"</span><span class="p">:</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">),</span>
+    <span class="s2">"scaling_fn"</span><span class="p">:</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">),</span>
     <span class="s2">"fss"</span><span class="p">:</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
 <span class="p">}</span>
 <span class="n">steps</span> <span class="o">=</span> <span class="mi">8000</span>
 
-<span class="n">params</span><span class="p">,</span> <span class="n">losses</span><span class="p">,</span> <span class="n">critical_vals</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">init_params</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+<span class="n">losses</span><span class="p">,</span> <span class="n">critical_vals</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
 
-<span class="n">c1_est</span><span class="p">,</span> <span class="n">c2_est</span><span class="p">,</span> <span class="n">scaled_pc_est</span> <span class="o">=</span> <span class="n">get_fss_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<span class="n">c1_est</span><span class="p">,</span> <span class="n">c2_est</span><span class="p">,</span> <span class="n">scaled_pc_est</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">critical_params</span>
 <span class="n">pc_est</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">bij_temperature</span><span class="o">.</span><span class="n">inverse</span><span class="p">(</span><span class="n">scaled_pc_est</span><span class="p">))</span>
 <span class="n">c1_est</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">c1_est</span><span class="p">)</span>
 <span class="n">c2_est</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">c2_est</span><span class="p">)</span>
@@ -578,9 +570,9 @@ We constrain:</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>=== Estimation Results ===
-c_1 (exact = 0.75000)   : 0.74874
-c_2 (exact = -1.75000)  : -1.75278
-p_c (exact = 0.50000)   : 0.50026
+c_1 (exact = 0.75000)   : 0.67565
+c_2 (exact = -1.75000)  : -1.61921
+p_c (exact = 0.50000)   : 0.50051
 </pre></div>
 </div>
 </div>
@@ -612,7 +604,7 @@ p_c (exact = 0.50000)   : 0.50026
 
 <span class="c1"># Plot NN prediction</span>
 <span class="n">x_grid</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">y_pred</span> <span class="o">=</span> <span class="n">mlp</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">"mlp"</span><span class="p">],</span> <span class="n">x_grid</span><span class="p">)</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">scaling_fn</span><span class="p">(</span><span class="n">x_grid</span><span class="p">)</span>
 <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_grid</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"NN $F(X)$"</span><span class="p">)</span>
 
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">"Scaled probability $X = (p - p_{\mathrm</span><span class="si">{c}</span><span class="s2">}) L^</span><span class="si">{c_1}</span><span class="s2">$"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
@@ -627,7 +619,7 @@ p_c (exact = 0.50000)   : 0.50026
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/a279d94c515cbe7e03b001c7911404e9d603fc171e5d8578229af84d729be2fb.png" src="_images/a279d94c515cbe7e03b001c7911404e9d603fc171e5d8578229af84d729be2fb.png" />
+<img alt="_images/92b84e6cdd38e02941c5ec0249ca49ce802b33def490dcf9982e0c62d94d4bfd.png" src="_images/92b84e6cdd38e02941c5ec0249ca49ce802b33def490dcf9982e0c62d94d4bfd.png" />
 </div>
 </div>
 </section>
@@ -669,7 +661,7 @@ p_c (exact = 0.50000)   : 0.50026
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Two-Dimensional Ising Model</p>
+        <p class="prev-next-title">Two-Dimensional Ising Model (Flax NNX)</p>
       </div>
     </a>
 </div>
@@ -690,8 +682,8 @@ p_c (exact = 0.50000)   : 0.50026
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#theoretical-background">1. Theoretical Background</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-and-inspect-data">2. Load and Inspect Data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-neural-scaling-analysis">3. Set Up Neural Scaling Analysis</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-with-nsa">4. Optimization with NSA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-nnx-scaling-model">3. Set Up NNX Scaling Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-with-nnx">4. Optimization with NNX</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-collapse-and-nn-fitting-curve">5. Scaling Collapse and NN Fitting Curve</a></li>
 </ul>
   </nav></div>

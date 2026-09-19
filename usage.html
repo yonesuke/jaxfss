@@ -69,7 +69,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Two-Dimensional Ising Model" href="ising.html" />
+    <link rel="next" title="Two-Dimensional Ising Model (Flax NNX)" href="ising.html" />
     <link rel="prev" title="Neural Scaling Analysis (NSA)" href="nsa.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -185,8 +185,8 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="ising.html">Two-Dimensional Ising Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="percolation.html">Two-Dimensional Bond Percolation Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ising.html">Two-Dimensional Ising Model (Flax NNX)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="percolation.html">Two-Dimensional Bond Percolation Model (Flax NNX)</a></li>
 </ul>
 
     </div>
@@ -382,22 +382,19 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-function">1. Scaling Function</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-function-nnx-module">1. Scaling Function (<code class="docutils literal notranslate"><span class="pre">nnx.Module</span></code>)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#standard-mlp">Standard MLP</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rationalmlp">RationalMLP</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-handler-criticaldata">2. Data Handler (<code class="docutils literal notranslate"><span class="pre">CriticalData</span></code>)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loss-functions">3. Loss Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unified-fss-model-fssmodel">2. Unified FSS Model (<code class="docutils literal notranslate"><span class="pre">FSSModel</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-handler-criticaldata">3. Data Handler (<code class="docutils literal notranslate"><span class="pre">CriticalData</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loss-functions">4. Loss Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-squared-error-mseloss">Mean Squared Error (<code class="docutils literal notranslate"><span class="pre">MSELoss</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#negative-log-likelihood-nllloss">Negative Log-Likelihood (<code class="docutils literal notranslate"><span class="pre">NLLLoss</span></code>)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-fit">4. Optimization (<code class="docutils literal notranslate"><span class="pre">fit</span></code>)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-optimizer-recommended">Multi-Optimizer (Recommended)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-optimizer">Single Optimizer</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-fit">5. Optimization (<code class="docutils literal notranslate"><span class="pre">fit</span></code>)</a></li>
 </ul>
             </nav>
         </div>
@@ -411,41 +408,74 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h1>
-<p>Here, we highlight the main building blocks to perform finite-size scaling analysis with <code class="docutils literal notranslate"><span class="pre">jaxfss</span></code>.</p>
+<p>Here, we highlight the main building blocks to perform finite-size scaling analysis with <code class="docutils literal notranslate"><span class="pre">jaxfss</span></code> using <strong>Flax NNX</strong>.</p>
 <hr class="docutils" />
-<section id="scaling-function">
-<h2>1. Scaling Function<a class="headerlink" href="#scaling-function" title="Permalink to this heading">#</a></h2>
-<p>In <code class="docutils literal notranslate"><span class="pre">jaxfss</span></code>, we approximate the unknown universal scaling function <span class="math notranslate nohighlight">\(F[X]\)</span> with a neural network.
-We provide modules built on <a class="reference external" href="https://github.com/google/flax">Flax</a>:</p>
+<section id="scaling-function-nnx-module">
+<h2>1. Scaling Function (<code class="docutils literal notranslate"><span class="pre">nnx.Module</span></code>)<a class="headerlink" href="#scaling-function-nnx-module" title="Permalink to this heading">#</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">jaxfss</span></code>, the unknown universal scaling function <span class="math notranslate nohighlight">\(F[X]\)</span> is approximated by an object-oriented neural network module built on <a class="reference external" href="https://flax.readthedocs.io/">Flax NNX</a>.</p>
 <section id="standard-mlp">
 <h3>Standard MLP<a class="headerlink" href="#standard-mlp" title="Permalink to this heading">#</a></h3>
-<p>A multilayer perceptron with customizable activations (default: <code class="docutils literal notranslate"><span class="pre">sigmoid</span></code>):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<p>A multilayer perceptron with customizable activations (default: <code class="docutils literal notranslate"><span class="pre">nnx.sigmoid</span></code>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jaxfss</span>
 
-<span class="n">mlp</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">MLP</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<span class="n">mlp_params</span> <span class="o">=</span> <span class="n">mlp</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">]]))</span>
+<span class="n">mlp</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">MLP</span><span class="p">(</span><span class="n">din</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">mlp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># Direct object-oriented forward call</span>
 </pre></div>
 </div>
 </section>
 <section id="rationalmlp">
 <h3>RationalMLP<a class="headerlink" href="#rationalmlp" title="Permalink to this heading">#</a></h3>
 <p>A network with trainable rational function activations (<span class="math notranslate nohighlight">\(P(x)/Q(x)\)</span>) from <a class="reference external" href="https://arxiv.org/abs/2004.01902">arXiv:2004.01902</a>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jaxfss</span>
 
-<span class="n">mlp</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">RationalMLP</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<span class="n">mlp_params</span> <span class="o">=</span> <span class="n">mlp</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">]]))</span>
+<span class="n">mlp</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">RationalMLP</span><span class="p">(</span><span class="n">din</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">mlp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">RationalMLP</span></code> is especially effective for smooth physical functions without vanishing gradient or sharp cusp artifacts.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RationalMLP</span></code> provides smooth physical function approximation without saturation or vanishing gradient problems.</p>
 </section>
 </section>
 <hr class="docutils" />
+<section id="unified-fss-model-fssmodel">
+<h2>2. Unified FSS Model (<code class="docutils literal notranslate"><span class="pre">FSSModel</span></code>)<a class="headerlink" href="#unified-fss-model-fssmodel" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">FSSModel</span></code> encapsulates the neural scaling function, critical exponents (<span class="math notranslate nohighlight">\(c_1, c_2\)</span>), critical point (<span class="math notranslate nohighlight">\(T_{\mathrm{c}}\)</span>), and parameter bijectors into a single stateful NNX module.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flax</span><span class="w"> </span><span class="kn">import</span> <span class="n">nnx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">softclip</span><span class="w"> </span><span class="kn">import</span> <span class="n">SoftClip</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jaxfss</span>
+
+<span class="c1"># Define parameter bounds using bijectors</span>
+<span class="n">bij_c1</span> <span class="o">=</span> <span class="n">SoftClip</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">bij_c2</span> <span class="o">=</span> <span class="n">SoftClip</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">bij_Tc</span> <span class="o">=</span> <span class="n">SoftClip</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">bijector</span><span class="p">(</span><span class="n">raw_params</span><span class="p">):</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">pc</span> <span class="o">=</span> <span class="n">raw_params</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="n">bij_c1</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">p1</span><span class="p">),</span>
+        <span class="n">bij_c2</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">p2</span><span class="p">),</span>
+        <span class="n">bij_Tc</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">pc</span><span class="p">),</span>
+    <span class="p">])</span>
+
+<span class="n">scaling_fn</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">RationalMLP</span><span class="p">(</span><span class="n">din</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">rngs</span><span class="o">=</span><span class="n">nnx</span><span class="o">.</span><span class="n">Rngs</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">FSSModel</span><span class="p">(</span><span class="n">scaling_fn</span><span class="o">=</span><span class="n">scaling_fn</span><span class="p">,</span> <span class="n">n_critical</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">bijector</span><span class="o">=</span><span class="n">bijector</span><span class="p">)</span>
+
+<span class="c1"># Forward pass automatically computes scaled input: F[(T - Tc) * L^c1]</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">Ls</span><span class="p">,</span> <span class="n">Ts</span><span class="p">)</span>
+
+<span class="c1"># Target scaling: Y = A * L^c2</span>
+<span class="n">scaled_Y</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">scaled_target</span><span class="p">(</span><span class="n">Ls</span><span class="p">,</span> <span class="n">As</span><span class="p">)</span>
+
+<span class="c1"># Access physical critical parameters</span>
+<span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">Tc</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">critical_params</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
 <section id="data-handler-criticaldata">
-<h2>2. Data Handler (<code class="docutils literal notranslate"><span class="pre">CriticalData</span></code>)<a class="headerlink" href="#data-handler-criticaldata" title="Permalink to this heading">#</a></h2>
+<h2>3. Data Handler (<code class="docutils literal notranslate"><span class="pre">CriticalData</span></code>)<a class="headerlink" href="#data-handler-criticaldata" title="Permalink to this heading">#</a></h2>
 <p>Normalizing physical input data before feeding them into neural networks is crucial for numerical stability and convergence.
 <code class="docutils literal notranslate"><span class="pre">CriticalData</span></code> automatically applies affine scaling:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jaxfss</span>
@@ -456,7 +486,7 @@ We provide modules built on <a class="reference external" href="https://github.c
 <span class="n">As_err</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Error bar array</span>
 
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">CriticalData</span><span class="p">(</span><span class="n">Ls</span><span class="p">,</span> <span class="n">Ts</span><span class="p">,</span> <span class="n">As</span><span class="p">,</span> <span class="n">As_err</span><span class="p">)</span>
-<span class="n">train_data</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">train_data</span>  <span class="c1"># Or dataset.training_data</span>
+<span class="n">train_data</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">train_data</span>
 <span class="c1"># Keys: "system_size", "temperature", "observable", "observable_var"</span>
 </pre></div>
 </div>
@@ -472,7 +502,7 @@ We provide modules built on <a class="reference external" href="https://github.c
 </section>
 <hr class="docutils" />
 <section id="loss-functions">
-<h2>3. Loss Functions<a class="headerlink" href="#loss-functions" title="Permalink to this heading">#</a></h2>
+<h2>4. Loss Functions<a class="headerlink" href="#loss-functions" title="Permalink to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">jaxfss</span></code> provides loss functions matching common statistical criteria:</p>
 <section id="mean-squared-error-mseloss">
 <h3>Mean Squared Error (<code class="docutils literal notranslate"><span class="pre">MSELoss</span></code>)<a class="headerlink" href="#mean-squared-error-mseloss" title="Permalink to this heading">#</a></h3>
@@ -499,39 +529,32 @@ We provide modules built on <a class="reference external" href="https://github.c
 </section>
 <hr class="docutils" />
 <section id="optimization-fit">
-<h2>4. Optimization (<code class="docutils literal notranslate"><span class="pre">fit</span></code>)<a class="headerlink" href="#optimization-fit" title="Permalink to this heading">#</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">fit</span></code> function executes a JIT-compiled optimization loop using <a class="reference external" href="https://github.com/deepmind/optax">Optax</a>.</p>
-<section id="multi-optimizer-recommended">
-<h3>Multi-Optimizer (Recommended)<a class="headerlink" href="#multi-optimizer-recommended" title="Permalink to this heading">#</a></h3>
-<p>Because neural network weights and physical critical exponents have different scales and sensitivities, using separate learning rates is recommended:</p>
+<h2>5. Optimization (<code class="docutils literal notranslate"><span class="pre">fit</span></code>)<a class="headerlink" href="#optimization-fit" title="Permalink to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">jaxfss.fit</span></code> executes a JIT-compiled optimization loop using Flax NNX and Optax.
+Because NNX models are stateful, model parameters are updated in-place.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">optax</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jaxfss</span>
 
-<span class="n">init_params</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"mlp"</span><span class="p">:</span> <span class="n">mlp_params</span><span class="p">,</span>
-    <span class="s2">"fss"</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Critical parameters</span>
-<span class="p">}</span>
+<span class="c1"># Define loss function on the model</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">loss_fn</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">FSSModel</span><span class="p">):</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="n">Ls</span><span class="p">,</span> <span class="n">Ts</span><span class="p">)</span>
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">scaled_target</span><span class="p">(</span><span class="n">Ls</span><span class="p">,</span> <span class="n">As</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
 
-<span class="c1"># Separate optimizers for MLP and FSS parameters</span>
+<span class="c1"># Multi-optimizer: separate learning rates for NN weights and critical exponents</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"mlp"</span><span class="p">:</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">),</span>
+    <span class="s2">"scaling_fn"</span><span class="p">:</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">),</span>
     <span class="s2">"fss"</span><span class="p">:</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">),</span>
 <span class="p">}</span>
 
 <span class="n">steps</span> <span class="o">=</span> <span class="mi">10000</span>
-<span class="n">params</span><span class="p">,</span> <span class="n">losses</span><span class="p">,</span> <span class="n">critical_vals</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">init_params</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+<span class="n">losses</span><span class="p">,</span> <span class="n">critical_vals</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+
+<span class="c1"># Model parameters are updated in-place:</span>
+<span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">scaled_Tc</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">critical_params</span>
+<span class="n">physical_Tc</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">bij_temperature</span><span class="o">.</span><span class="n">inverse</span><span class="p">(</span><span class="n">scaled_Tc</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="single-optimizer">
-<h3>Single Optimizer<a class="headerlink" href="#single-optimizer" title="Permalink to this heading">#</a></h3>
-<p>You can also pass a single Optax optimizer:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
-<span class="n">params</span><span class="p">,</span> <span class="n">losses</span><span class="p">,</span> <span class="n">critical_vals</span> <span class="o">=</span> <span class="n">jaxfss</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">init_params</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">critical_vals</span></code> records the history of <code class="docutils literal notranslate"><span class="pre">params[&quot;fss&quot;]</span></code> across all optimization steps.</p>
-</section>
 </section>
 </section>
 
@@ -579,7 +602,7 @@ We provide modules built on <a class="reference external" href="https://github.c
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Two-Dimensional Ising Model</p>
+        <p class="prev-next-title">Two-Dimensional Ising Model (Flax NNX)</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -599,22 +622,19 @@ We provide modules built on <a class="reference external" href="https://github.c
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-function">1. Scaling Function</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-function-nnx-module">1. Scaling Function (<code class="docutils literal notranslate"><span class="pre">nnx.Module</span></code>)</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#standard-mlp">Standard MLP</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rationalmlp">RationalMLP</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-handler-criticaldata">2. Data Handler (<code class="docutils literal notranslate"><span class="pre">CriticalData</span></code>)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loss-functions">3. Loss Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unified-fss-model-fssmodel">2. Unified FSS Model (<code class="docutils literal notranslate"><span class="pre">FSSModel</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-handler-criticaldata">3. Data Handler (<code class="docutils literal notranslate"><span class="pre">CriticalData</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loss-functions">4. Loss Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mean-squared-error-mseloss">Mean Squared Error (<code class="docutils literal notranslate"><span class="pre">MSELoss</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#negative-log-likelihood-nllloss">Negative Log-Likelihood (<code class="docutils literal notranslate"><span class="pre">NLLLoss</span></code>)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-fit">4. Optimization (<code class="docutils literal notranslate"><span class="pre">fit</span></code>)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-optimizer-recommended">Multi-Optimizer (Recommended)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-optimizer">Single Optimizer</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-fit">5. Optimization (<code class="docutils literal notranslate"><span class="pre">fit</span></code>)</a></li>
 </ul>
   </nav></div>
 
