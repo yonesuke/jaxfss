@@ -1,8 +1,7 @@
-from typing import Callable, Any, Dict, Tuple, Union
+from typing import Callable, Any, Dict, Tuple, Union, Optional
 import jax
 import jax.numpy as jnp
-from jax import jit, value_and_grad
-from jax.lax import fori_loop
+from flax import nnx
 import optax
 
 
@@ -18,71 +17,77 @@ def NLLLoss(y_true: jnp.ndarray, y_pred: jnp.ndarray, var: jnp.ndarray, eps: flo
 
 
 def fit(
-    loss_fn: Callable,
-    optimizer: Union[optax.GradientTransformation, Dict[str, optax.GradientTransformation]],
-    init_params: Any,
+    model: nnx.Module,
+    loss_fn: Callable[[nnx.Module], jnp.ndarray],
+    optimizer: Union[optax.GradientTransformation, nnx.Optimizer, Dict[str, optax.GradientTransformation]],
     steps: int,
-) -> Tuple[Any, jnp.ndarray, jnp.ndarray]:
-    """Fit model parameters using Optax optimizer(s).
+) -> Tuple[jnp.ndarray, jnp.ndarray]:
+    """Fit a Flax NNX model using JIT-compiled optimization.
+
+    Because NNX models are stateful objects, model parameters are updated in-place.
 
     Args:
-        loss_fn: Loss function that takes params and returns a scalar loss.
-        optimizer: Either a single Optax optimizer, or a dict of optimizers
-            (e.g., {"mlp": opt_mlp, "fss": opt_fss}) for multi-transform optimization.
-        init_params: Initial parameters (dict or tuple/list). If dict, it usually contains
-            "mlp" and "fss" keys.
-        steps: Number of optimization steps.
+        model: The Flax NNX module to optimize (e.g. FSSModel or MLP).
+        loss_fn: Scalar loss function accepting `model` as argument.
+        optimizer: Either an Optax GradientTransformation, a dictionary of Optax transformations
+            (e.g., {"scaling_fn": opt_mlp, "fss": opt_fss}), or an existing nnx.Optimizer.
+        steps: Number of optimization iterations.
 
     Returns:
-        params: Final parameters after optimization.
-        losses: Array of loss values at each step.
-        critical_vals: Array of FSS parameter values at each step.
+        losses: Array of loss values across iterations.
+        critical_vals: Array of critical parameter histories across iterations.
     """
-    # Configure optimizer
-    if isinstance(optimizer, dict):
-        if isinstance(init_params, dict):
-            param_labels = {k: jax.tree_util.tree_map(lambda _: k, v) for k, v in init_params.items()}
-            opt = optax.multi_transform(optimizer, param_labels)
-        elif isinstance(init_params, (tuple, list)):
-            param_labels = tuple(
-                jax.tree_util.tree_map(lambda _, k=k: k, init_params[i])
-                for i, k in enumerate(optimizer.keys())
-            )
-            opt = optax.multi_transform(optimizer, param_labels)
-        else:
-            raise ValueError("When optimizer is a dict, init_params must be a dict or tuple/list.")
-    else:
+    # Configure NNX Optimizer
+    if isinstance(optimizer, nnx.Optimizer):
         opt = optimizer
+    elif isinstance(optimizer, dict):
+        # Multi-optimizer support via optax.multi_transform
+        pure_params = nnx.as_pure(nnx.state(model, nnx.Param))
 
-    opt_state = opt.init(init_params)
+        def make_label(path, _):
+            for key in optimizer.keys():
+                if any(str(p) == key for p in path):
+                    return key
+            return list(optimizer.keys())[0]
 
-    # Determine how to extract FSS parameters
-    is_dict = isinstance(init_params, dict) and "fss" in init_params
-    if is_dict:
-        n_critical = len(init_params["fss"])
-        extract_fss = lambda p: p["fss"]
-    elif isinstance(init_params, (tuple, list)) and len(init_params) > 1:
-        n_critical = len(init_params[1])
-        extract_fss = lambda p: p[1]
+        labels = jax.tree_util.tree_map_with_path(make_label, pure_params)
+        optax_tx = optax.multi_transform(optimizer, labels)
+        opt = nnx.Optimizer(model, optax_tx, wrt=nnx.Param)
     else:
-        n_critical = 0
-        extract_fss = lambda _: jnp.array([])
+        opt = nnx.Optimizer(model, optimizer, wrt=nnx.Param)
 
-    @jit
-    def update_fn(i, val):
-        params, opt_state, losses, critical_vals = val
-        loss, grad = value_and_grad(loss_fn)(params)
-        updates, opt_state = opt.update(grad, opt_state, params)
-        params = optax.apply_updates(params, updates)
-        losses = losses.at[i].set(loss)
-        if n_critical > 0:
-            critical_vals = critical_vals.at[i].set(extract_fss(params))
-        return [params, opt_state, losses, critical_vals]
+    # Check if model has critical_params
+    has_crit = hasattr(model, "critical_params")
+    if has_crit:
+        init_crit = jnp.asarray(model.critical_params)
+        n_crit = len(init_crit)
+    elif hasattr(model, "fss"):
+        init_crit = jnp.asarray(model.fss[...])
+        n_crit = len(init_crit)
+    else:
+        n_crit = 0
 
-    losses = jnp.zeros(steps)
-    critical_vals = jnp.zeros((steps, n_critical))
-    init_val = [init_params, opt_state, losses, critical_vals]
+    @nnx.jit(static_argnums=(1, 3))
+    def _run_loop(model, loss_fn, opt, steps: int):
+        graphdef, state = nnx.split((model, opt))
 
-    params, opt_state, losses, critical_vals = fori_loop(0, steps, update_fn, init_val)
+        def step_fn(i, val):
+            state, losses, critical_vals = val
+            m, o = nnx.merge(graphdef, state)
+            loss, grads = nnx.value_and_grad(loss_fn)(m)
+            o.update(m, grads)
+            if n_crit > 0:
+                crit = m.critical_params if hasattr(m, "critical_params") else m.fss[...]
+                critical_vals = critical_vals.at[i].set(crit)
+            new_state = nnx.state((m, o))
+            losses = losses.at[i].set(loss)
+            return new_state, losses, critical_vals
 
-    return params, losses, critical_vals
+        losses = jnp.zeros(steps)
+        critical_vals = jnp.zeros((steps, n_crit))
+        state, losses, critical_vals = jax.lax.fori_loop(0, steps, step_fn, (state, losses, critical_vals))
+        nnx.update((model, opt), state)
+        return losses, critical_vals
+
+    losses, critical_vals = _run_loop(model, loss_fn, opt, steps)
+    return losses, critical_vals

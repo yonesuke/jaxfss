@@ -1,8 +1,8 @@
-import jax
+from flax import nnx
 import jax.numpy as jnp
 import optax
 import pytest
-from jaxfss import MLP, MSELoss, NLLLoss, fit
+from jaxfss import MLP, FSSModel, MSELoss, NLLLoss, fit
 
 
 def test_losses():
@@ -18,28 +18,21 @@ def test_losses():
 
 
 def test_fit_single_optimizer():
-    key = jax.random.PRNGKey(0)
-    model = MLP(features=[8, 1])
-    mlp_params = model.init(key, jnp.ones((1, 1)))
+    mlp = MLP(din=1, features=[8, 1], rngs=nnx.Rngs(0))
+    model = FSSModel(scaling_fn=mlp, n_critical=2)
 
-    init_params = {
-        "mlp": mlp_params,
-        "fss": jnp.array([0.5, 0.5]),
-    }
-
-    # Dummy target
     X = jnp.linspace(-1.0, 1.0, 10).reshape(-1, 1)
     Y = X ** 2
+    Ls = jnp.ones_like(X)
 
-    def loss_fn(params):
-        c = params["fss"][0]
-        pred = model.apply(params["mlp"], X) * c
+    def loss_fn(m):
+        pred = m(Ls, X)
         return MSELoss(Y, pred)
 
     optimizer = optax.adam(learning_rate=1e-2)
-    steps = 20
+    steps = 30
 
-    params, losses, critical_vals = fit(loss_fn, optimizer, init_params, steps)
+    losses, critical_vals = fit(model, loss_fn, optimizer, steps)
 
     assert len(losses) == steps
     assert critical_vals.shape == (steps, 2)
@@ -48,30 +41,24 @@ def test_fit_single_optimizer():
 
 
 def test_fit_multi_optimizer():
-    key = jax.random.PRNGKey(1)
-    model = MLP(features=[8, 1])
-    mlp_params = model.init(key, jnp.ones((1, 1)))
-
-    init_params = {
-        "mlp": mlp_params,
-        "fss": jnp.array([0.5, 0.5]),
-    }
+    mlp = MLP(din=1, features=[8, 1], rngs=nnx.Rngs(1))
+    model = FSSModel(scaling_fn=mlp, n_critical=2)
 
     X = jnp.linspace(-1.0, 1.0, 10).reshape(-1, 1)
     Y = 2.0 * X
+    Ls = jnp.ones_like(X)
 
-    def loss_fn(params):
-        c = params["fss"][0]
-        pred = model.apply(params["mlp"], X) + c
+    def loss_fn(m):
+        pred = m(Ls, X)
         return MSELoss(Y, pred)
 
     optimizer = {
-        "mlp": optax.adam(learning_rate=1e-3),
+        "scaling_fn": optax.adam(learning_rate=1e-3),
         "fss": optax.adam(learning_rate=1e-2),
     }
-    steps = 20
+    steps = 30
 
-    params, losses, critical_vals = fit(loss_fn, optimizer, init_params, steps)
+    losses, critical_vals = fit(model, loss_fn, optimizer, steps)
 
     assert len(losses) == steps
     assert critical_vals.shape == (steps, 2)

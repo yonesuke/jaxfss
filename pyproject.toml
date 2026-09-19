@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jaxfss"
-version = "0.1.0"
-description = "JAX/Flax implementation of finite-size scaling"
+version = "0.2.0"
+description = "JAX/Flax NNX implementation of finite-size scaling"
 readme = "README.md"
 license = "MIT"
 authors = [
@@ -13,11 +13,11 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "jax>=0.4.0",
-    "flax>=0.7.0",
+    "jax>=0.4.30,<0.11.0",
+    "jaxlib>=0.4.30,<0.11.0",
+    "flax>=0.8.4",
     "optax>=0.1.5",
     "distrax>=0.1.3",
-    "rationalnets>=0.1.0",
     "softclip>=0.1.0",
     "numpy",
 ]

@@ -5,18 +5,19 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="jaxfss",
-    version="0.1.0",
+    version="0.2.0",
     install_requires=[
-        "jax",
-        "flax",
-        "optax",
-        "distrax",
-        "rationalnets",
-        "softclip"
+        "jax>=0.4.30,<0.11.0",
+        "jaxlib>=0.4.30,<0.11.0",
+        "flax>=0.8.4",
+        "optax>=0.1.5",
+        "distrax>=0.1.3",
+        "softclip>=0.1.0",
+        "numpy",
     ],
-    author="yonesuke",
+    author="Ryosuke Yoneda",
     author_email="13e.e.c.13@gmail.com",
-    description="JAX/Flax implementation of finite-size scaling",
+    description="JAX/Flax NNX implementation of finite-size scaling",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/yonesuke/jaxfss",
@@ -27,5 +28,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.10',
+    python_requires=">=3.10",
 )
