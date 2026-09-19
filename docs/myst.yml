@@ -15,6 +15,10 @@ project:
         - file: installation.md
         - file: nsa.md
         - file: usage.md
+    - title: Data Generation
+      children:
+        - file: data_generation/ising_simulation.ipynb
+        - file: data_generation/percolation_simulation.ipynb
     - title: Examples
       children:
         - file: ising.ipynb
