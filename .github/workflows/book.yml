@@ -27,9 +27,17 @@ jobs:
           pip install -r docs/requirements.txt
           pip install .
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Build the book
+        env:
+          BASE_URL: /${{ github.event.repository.name }}
         run: |
-          jupyter-book build docs/
+          cd docs
+          jupyter-book build --html
 
       - name: GitHub Pages action
         uses: peaceiris/actions-gh-pages@v4

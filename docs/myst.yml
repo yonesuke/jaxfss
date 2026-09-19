@@ -1,0 +1,28 @@
+version: 1
+project:
+  title: jaxfss
+  description: JAX/Flax NNX implementation of finite-size scaling
+  authors:
+    - name: Ryosuke Yoneda
+      email: 13e.e.c.13@gmail.com
+  github: https://github.com/yonesuke/jaxfss
+  bibliography:
+    - references.bib
+  toc:
+    - file: index.md
+    - title: Guides
+      children:
+        - file: installation.md
+        - file: nsa.md
+        - file: usage.md
+    - title: Examples
+      children:
+        - file: ising.ipynb
+        - file: percolation.ipynb
+
+site:
+  template: book-theme
+  title: jaxfss documentation
+  options:
+    logo: logo.png
+    favicon: favicon.ico

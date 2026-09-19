@@ -3,12 +3,19 @@ import jax.numpy as jnp
 from flax import nnx
 
 
+# Default polynomial coefficients approximating ReLU from Boullé et al. (2020)
+DEFAULT_RATIONAL_ALPHA = jnp.array([1.1915, 1.5957, 0.5, 0.0218])
+DEFAULT_RATIONAL_BETA = jnp.array([2.383, 0.0, 1.0])
+
+
 class Rational(nnx.Module):
     """Trainable rational function activation layer P(x) / Q(x) in Flax NNX.
 
     Approximates arbitrary smooth functions with trainable numerator and denominator
-    polynomial coefficients:
-        R(x) = (a_0 + a_1*x + ... + a_p*x^p) / (1 + |b_1*x + ... + b_q*x^q|)
+    polynomial coefficients evaluated via Horner's scheme (jnp.polyval).
+    Initialized by default with coefficients approximating ReLU(x):
+        ref: Nicolas Boullé, Yuji Nakatsukasa, and Alex Townsend,
+             Rational neural networks, NeurIPS (2020) / arXiv:2004.01902.
 
     Args:
         p_order: Degree of the numerator polynomial P(x) (default: 3).
@@ -16,27 +23,29 @@ class Rational(nnx.Module):
     """
 
     def __init__(self, p_order: int = 3, q_order: int = 2):
-        a_init = jnp.zeros(p_order + 1).at[1].set(1.0)
-        b_init = jnp.zeros(q_order)
-        self.a = nnx.Param(a_init)
-        self.b = nnx.Param(b_init)
+        if p_order == 3 and q_order == 2:
+            alpha_init = DEFAULT_RATIONAL_ALPHA
+            beta_init = DEFAULT_RATIONAL_BETA
+        else:
+            alpha_init = jnp.zeros(p_order + 1).at[-2].set(1.0)
+            beta_init = jnp.zeros(q_order + 1).at[-1].set(1.0)
+
+        self.alpha = nnx.Param(alpha_init)
+        self.beta = nnx.Param(beta_init)
+
+    @property
+    def a(self):
+        """Alias for numerator coefficients."""
+        return self.alpha
+
+    @property
+    def b(self):
+        """Alias for denominator coefficients."""
+        return self.beta
 
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
-        p_val = self.a[0]
-        x_pow = x
-        for i in range(1, len(self.a)):
-            p_val = p_val + self.a[i] * x_pow
-            if i < len(self.a) - 1:
-                x_pow = x_pow * x
+        return jnp.polyval(self.alpha[...], x) / jnp.polyval(self.beta[...], x)
 
-        q_poly = jnp.zeros_like(x)
-        x_pow = x
-        for j in range(len(self.b)):
-            q_poly = q_poly + self.b[j] * x_pow
-            if j < len(self.b) - 1:
-                x_pow = x_pow * x
-        q_val = 1.0 + jnp.abs(q_poly)
-        return p_val / q_val
 
 
 def _wrap_list(items):

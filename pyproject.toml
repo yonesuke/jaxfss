@@ -28,7 +28,7 @@ dev = [
     "matplotlib>=3.5.0",
 ]
 docs = [
-    "jupyter-book>=0.13.0,<1.0.0",
+    "jupyter-book>=2.0.0",
     "matplotlib>=3.5.0",
 ]
 
