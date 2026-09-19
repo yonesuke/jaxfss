@@ -101,19 +101,17 @@ class RationalMLP(nnx.Module):
         rngs: nnx.Rngs,
     ):
         self.layers = nnx.List()
-        self.activations = nnx.List()
         in_dim = din
         for f in features[:-1]:
             self.layers.append(nnx.Linear(in_dim, f, rngs=rngs))
-            self.activations.append(Rational(p_order, q_order))
+            self.layers.append(Rational(p_order, q_order))
             in_dim = f
         self.layers.append(nnx.Linear(in_dim, features[-1], rngs=rngs))
 
-
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
-        for layer, act in zip(self.layers[:-1], self.activations):
-            x = act(layer(x))
-        return self.layers[-1](x)
+        for layer in self.layers:
+            x = layer(x)
+        return x
 
 
 class FSSModel(nnx.Module):
